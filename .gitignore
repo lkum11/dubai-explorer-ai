@@ -1,0 +1,52 @@
+
+# -------------------------------------------------------
+# Dubai Explorer AI - Flask + RAG + Docker POC
+# -------------------------------------------------------
+# Author: Lovely Kumari
+# Purpose: Ignore only essential local/dev artifacts
+# -------------------------------------------------------
+
+# --- Python cache ---
+__pycache__/
+*.py[cod]
+
+# --- Virtual environments ---
+.venv/
+venv/
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+
+# --- OS files ---
+.DS_Store
+
+# --- Flask / DB ---
+instance/
+*.db
+*.sqlite3
+
+# --- Migrations ---
+migrations/
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Env files (never commit secrets) ---
+.env
+.env.*
+
+# --- Docker volumes / temp data ---
+pgdata/
+es-data/
+es-certs/
+*.pid
+*.lock
+
+# --- Redis / Valkey dump ---
+dump.rdb
+
+*.pyc
+*.crt
+*.key
