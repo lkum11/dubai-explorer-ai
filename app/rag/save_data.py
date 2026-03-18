@@ -12,7 +12,7 @@ def update_record(record, article):
         record.summary = article.get("summary")
         record.word_count = article.get("word_count")
         record.char_count = article.get("char_count")
-        record.source = "Wikipedia"
+        record.source = "wikipedia"
         return record
     except Exception:
         logger.exception(f"Unexpected while updating record for article: {article} with record:{record}")
@@ -60,6 +60,7 @@ def save_articles_to_db(parsed_articles: list[dict]) -> dict:
         
         inserted = 0
         updated = 0
+        failed = 0 
         for article in parsed_articles:
             record = db.session.query(WikiArticle).filter_by(
                 page_id=article.get("page_id")
@@ -67,10 +68,16 @@ def save_articles_to_db(parsed_articles: list[dict]) -> dict:
 
             if not record:
                 record = WikiArticle()
-                update_record(record, article)
+                result = update_record(record, article)
+                if result is None:
+                    failed += 1
+                    continue
                 inserted += 1
             else:
-                update_record(record, article)
+                result = update_record(record, article)
+                if result is None:
+                    failed += 1
+                    continue
                 updated += 1
 
             db.session.add(record)
@@ -80,7 +87,7 @@ def save_articles_to_db(parsed_articles: list[dict]) -> dict:
         return {
             "inserted": inserted,
             "updated": updated,
-            "failed": 0
+            "failed": failed
         }
     except Exception:
         db.session.rollback()
@@ -99,7 +106,7 @@ def save_chunks_to_db(chunks: list[dict]) -> dict:
     """
     try:
         if not chunks:
-            logger.info(f"no record available to save")
+            logger.info(f"No record available to save")
             return {"inserted": 0, "failed": 0}
         
         inserted = 0
