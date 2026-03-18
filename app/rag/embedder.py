@@ -1,18 +1,16 @@
-from openai import OpenAI
 from langchain_openai import OpenAIEmbeddings
 import logging
 from app.db import db
 from app.models import WikiChunk
+from app.config import EMBEDDING_MODEL
 
 logger = logging.getLogger(__name__)
 
 
-client = OpenAI()
 # Vector Embeddings
 # Elasticsearch mapping expects 1536 dimensions hence used text-embedding-3-small.
-# TODO : move "text-embedding-3-small" to env 
 embedding_model = OpenAIEmbeddings(
-    model="text-embedding-3-small"
+    model=EMBEDDING_MODEL
 )
 # get_embedding
 def get_embedding_model() -> OpenAIEmbeddings:
@@ -42,6 +40,7 @@ def embed_articles(chunks_to_embed=None) -> list[dict]:
             if not embedding:
                 failed += 1
                 logger.warning(f"Skipped chunk {chunk.id} - embedding returned empty.")
+                continue
 
             chunk.embedding = embedding
             chunk.is_embedded = True
@@ -50,10 +49,10 @@ def embed_articles(chunks_to_embed=None) -> list[dict]:
 
         db.session.commit()
 
-        logger.info({"Embedding complete — processed": processed, "failed": failed, "model": "text-embedding-3-small"})
-        return {"processed": processed, "failed": failed, "model": "text-embedding-3-small"}
+        logger.info(f"Embedding complete — processed: {processed}, failed: {failed}, model: {EMBEDDING_MODEL}")
+        return {"processed": processed, "failed": failed, "model": EMBEDDING_MODEL}
 
     except Exception:
         logger.exception(f"Exception while embedding.")
         db.session.rollback()
-        return {"processed": 0, "failed": len(chunks_to_embed), "model": "text-embedding-3-small"}
+        return {"processed": 0, "failed": len(chunks_to_embed), "model": EMBEDDING_MODEL}
