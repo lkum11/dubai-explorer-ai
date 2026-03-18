@@ -6,12 +6,6 @@ services:
       sh -c "
         flask run --host=0.0.0.0 --port=5000
       "
-    # command: >
-    #   sh -c "
-    #     flask db upgrade &&
-    #     python -m scripts.init_pipeline &&
-    #     flask run --host=0.0.0.0 --port=5000
-    #   "
     ports:
       - "5000:5000"
     environment:
@@ -26,8 +20,12 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
     volumes:
       - .:/app
 
@@ -56,7 +54,7 @@ services:
     command: celery -A app.celery_app.celery worker --loglevel=info
     depends_on:
       - redis
-      - web
+      - db
     volumes:
       - .:/app
     environment:
@@ -104,27 +102,7 @@ services:
     depends_on:
       - elasticsearch
 
-  # elasticsearch:
-  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
-  #   container_name: es-secure
-  #   ports:
-  #     - "9200:9200"
-  #   environment:
-  #     - discovery.type=single-node
-  #     - cluster.name=docker-cluster
-  #     - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD}
-  #     - xpack.security.enabled=true
-  #   volumes:
-  #     - es-data:/usr/share/elasticsearch/data
-  #     - es-certs:/usr/share/elasticsearch/config/certs
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-u", "elastic:${ELASTICSEARCH_PASSWORD}", "-k", "https://localhost:9200"]
-  #     interval: 20s
-  #     timeout: 10s
-  #     retries: 5
-
 
 volumes:
   pgdata:
   es-data:
-  es-certs:
