@@ -13,33 +13,61 @@ def fetch_wikipedia_page(titles: list[str]) -> dict:
             logger.warning("Invalid title provided")
             return {"status": 400, "data": None}
         
-        # titles = ["Burj Khalifa", "Palm Jumeirah", "Dubai Mall"] - > "Burj Khalifa|Palm Jumeirah|Dubai Mall"
-        # Wikipedia’s API interprets that as: -> Fetch pages whose titles are “Burj Khalifa”, “Palm Jumeirah”, and “Dubai Mall”.
+        # Stores best version of each article across all pagination rounds
+        all_pages = {}
+
         params = {
             "action": "query",
             "format": "json",
             "titles": "|".join(list(set([t.strip().title() for t in titles if t.strip()]))),
-            "explaintext": 1,
-            "prop": "extracts",
+            "explaintext": 1, # → return plain text, not HTML
+            "prop": "extracts", # → return article content
         }
         headers = {
-            "User-Agent": "DubaiTourismRAG/0.1 (lovely@example.com)"
+            "User-Agent": "DubaiTourismRAG/0.1 (joinlovely@gmail.com)"
         }
         # timeout=(3, 10): up to 3 seconds to establish a connection and up to 10 seconds for the server to send data
 
-        response = requests.get(WIKI_API_URL, params=params, headers=headers, timeout=(3, 10))
+        page_num = 1
+        # Wikipedia API pagination explanation:
+        # When fetching multiple large articles, Wikipedia returns ONE full extract per request.
+        # Remaining articles come back with empty extracts and a 'continue' token.
+        # We loop using the continue token until batchcomplete=True.
+        # Smart merge: for each article, we keep whichever version has the most content.
+        # Example with ["Burj Khalifa", "Palm Jumeirah"]:
+        #   Page 1 → Burj Khalifa (29780 chars) + Palm Jumeirah (0 chars) → save both
+        #   Page 2 → Burj Khalifa (0 chars) + Palm Jumeirah (7713 chars) → only update Palm Jumeirah
+        #   Result → both articles fully fetched 
+        while True:
+            response = requests.get(WIKI_API_URL, params=params, headers=headers, timeout=(3, 10))
 
-        if response.ok: # response.status_code == 200 vs response.ok : Covers 2xx range
+            if not response.ok:
+                logger.error(f"Request failed with status={response.status_code}")
+                break
+
             data = response.json()
-            logger.info(f"Fetched data from {response.url} (status={response.status_code})")
-        else:
-            data=None
-            logger.error(f"Request failed with status={response.status_code} for titles={titles}")
-        
-        if not data.get("query", {}).get("pages"):
-            logger.warning(f"No pages found for {titles}")
 
-        return {"status": response.status_code, "data": data}
+            pages = data.get("query", {}).get("pages", {})
+            for key, page in pages.items():
+                if key not in all_pages or len(page.get("extract", "")) > len(all_pages[key].get("extract", "")):
+                    all_pages[key] = page
+
+            logger.info(f"Fetching page {page_num} for titles: {titles}")
+            logger.info(f"Page {page_num}: fetched {len(pages)} articles")
+            if "continue" in data:
+                logger.info("More pages available, continuing...")
+
+            if "continue" not in data:
+                break
+
+            params.update(data["continue"])
+            page_num += 1
+
+        logger.info(f"Total pages fetched: {len(all_pages)}")
+        return {
+            "status": 200,
+            "data": {"query": {"pages": all_pages}}
+        }
     
     except requests.exceptions.Timeout:
         logger.exception("Wikipedia API request timed out. Try again later.")
