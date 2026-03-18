@@ -1,9 +1,11 @@
+from app.config import ES_INDEX_NAME, TOP_K, NUM_CANDIDATES
 import logging
+
 logger = logging.getLogger(__name__)
 
 class Retriever:
     def __init__(
-        self, es_client, embedder, index_name="wiki_articles_vector", top_k=5
+        self, es_client, embedder, index_name=ES_INDEX_NAME, top_k=TOP_K
     ):
         self.es_client = es_client
         self.embedder = embedder
@@ -36,7 +38,9 @@ class Retriever:
                     "knn": {
                         "field": "embedding",
                         "query_vector": embedding_vector,
-                        "num_candidates": 50
+                        # num_candidates: pool size ES considers before returning top_k results
+                        # higher = better recall, lower = faster. Rule of thumb: 10x top_k
+                        "num_candidates": NUM_CANDIDATES
                     }
                 },
                 _source=["title", "text", "page_id"]
@@ -49,9 +53,7 @@ class Retriever:
     def retrieve(self, query_text):
         try:
             logger.info(f"Retrieving top-{self.top_k} documents for query: '{query_text[:60]}'")
-            # Lovely: Pseudocode for future
-            # if query_text in cache:
-            #     return cache[query_text]
+            # TODO: Add Redis query cache to avoid redundant OpenAI embedding calls
             embedding_vector = self._embed_query(query_text)
             response = self._search_es(embedding_vector=embedding_vector)
 

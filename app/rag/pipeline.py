@@ -6,6 +6,7 @@ from app.rag.save_data import save_articles_to_db, save_chunks_to_db
 from app.rag.chunker import chunk_articles
 from app.rag.embedder import embed_articles
 from app.elasticsearch.sync_service import sync_to_elasticsearch
+from app.config import WIKI_TITLES
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ def run_wiki_ingestion_pipeline():
         logger.info("Starting ingestion pipeline...")
 
         # Fetch and Parse
-        page_json = fetch_wikipedia_page(["Burj Khalifa", "Palm Jumeirah"]) # Note: Only able to fetch one title at a time
+        page_json = fetch_wikipedia_page(WIKI_TITLES) # Note: Only able to fetch one title at a time
         parsed_articles = parse_wikipedia_text(page_json=page_json)
         if not parsed_articles:
             logger.info("No articles parsed.")

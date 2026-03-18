@@ -29,7 +29,7 @@ This project is a **production-grade proof of concept (POC)** showcasing a Retri
 
 #### 1. Clone the repository
 ```bash
-git clone https://github.com/<your-username>/dubai-explorer-ai.git
+git clone https://github.com/lkum11/dubai-explorer-ai
 cd dubai-explorer-ai
 ```
 
