@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import logging
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from app.config import CHUNK_SIZE, CHUNK_OVERLAP
 import uuid
 
 
@@ -8,15 +9,12 @@ logger = logging.getLogger(__name__)
 
 def chunk_articles(parsed_articles: list[dict]) -> list[dict]:
     """
-    Splits Wikipedia article summaries into smaller chunks for embedding.
-
     Args:
         parsed_articles (list[dict]): Parsed articles containing 'title', 'page_id', and 'summary'.
-        chunk_size (int): Max characters per chunk (default=500).
-        chunk_overlap (int): Overlap between consecutive chunks (default=50).
 
-    Returns:
-        list[dict]: A list of text chunks ready for embedding, with metadata.
+    Chunking config:
+        chunk_size: 800 chars per chunk
+        chunk_overlap: 100 chars overlap between consecutive chunks
     """
     try:
         if not parsed_articles:
@@ -26,8 +24,8 @@ def chunk_articles(parsed_articles: list[dict]) -> list[dict]:
         chunks = []
 
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,
-            chunk_overlap=100
+            chunk_size=CHUNK_SIZE,
+            chunk_overlap=CHUNK_OVERLAP
         )
 
         for article in parsed_articles:
