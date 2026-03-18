@@ -9,12 +9,15 @@ logger = logging.getLogger(__name__)
 
 def chunk_articles(parsed_articles: list[dict]) -> list[dict]:
     """
+    Splits Wikipedia article text into smaller overlapping chunks for embedding.
+    Uses RecursiveCharacterTextSplitter which splits at paragraph → sentence → word boundaries.
+
     Args:
         parsed_articles (list[dict]): Parsed articles containing 'title', 'page_id', and 'summary'.
 
     Chunking config:
-        chunk_size: 800 chars per chunk
-        chunk_overlap: 100 chars overlap between consecutive chunks
+        chunk_size: 1000 chars per chunk
+        chunk_overlap: 150 chars overlap between consecutive chunks
     """
     try:
         if not parsed_articles:
@@ -43,7 +46,7 @@ def chunk_articles(parsed_articles: list[dict]) -> list[dict]:
                     }
                     chunks.append(record)
             except Exception:
-                logger.exception(f"Failed to creare chunk for article:{article.get('title')}")
+                logger.exception(f"Failed to create chunk for article:{article.get('title')}")
                 continue
 
         logger.info(
