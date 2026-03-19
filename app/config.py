@@ -5,6 +5,14 @@ import os
 WIKI_TITLES = [
     "Burj Khalifa",
     "Palm Jumeirah",
+    "Dubai Mall",
+    "Dubai Marina",
+    "Dubai Creek",
+    "Jumeirah Beach",
+    "Dubai Frame",
+    "Museum of the Future",
+    "Gold Souk Dubai",
+    "Dubai Desert Conservation Reserve",
 ]
 
 # Chunking
@@ -18,3 +26,4 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 
 TOP_K = 5
 NUM_CANDIDATES = 50
+GENERATION_MODEL = "gpt-4o-mini"

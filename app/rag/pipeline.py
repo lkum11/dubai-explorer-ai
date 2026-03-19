@@ -11,22 +11,22 @@ from app.config import WIKI_TITLES
 logger = logging.getLogger(__name__)
 
 def run_wiki_ingestion_pipeline():
-    """Ingetion pipeline for RAG"""
+    """Ingestion pipeline for RAG — fetch, chunk, embed and sync to Elasticsearch."""
     try:
         logger.info("Starting ingestion pipeline...")
 
-        # Fetch and Parse
-        page_json = fetch_wikipedia_page(WIKI_TITLES) # Note: Only able to fetch one title at a time
+        # ── Stage 1: Fetch & Parse ──────────────────────────
+        page_json = fetch_wikipedia_page(WIKI_TITLES)
         parsed_articles = parse_wikipedia_text(page_json=page_json)
         if not parsed_articles:
             logger.info("No articles parsed.")
             return
-        else:
-            # Save articles to DB
-            response = save_articles_to_db(parsed_articles=parsed_articles)
-            logger.info(f"Summary of saved articles : {response}")
         
-        # Chunking Stage
+        # ── Stage 2: Save to PostgreSQL ─────────────────────
+        response = save_articles_to_db(parsed_articles=parsed_articles)
+        logger.info(f"Summary of saved articles : {response}")
+        
+        # ── Stage 3: Chunk ──────────────────────────────────
         unchunked_articles = db.session.query(WikiArticle).filter_by(
             is_chunked=False
         ).all()
@@ -56,12 +56,12 @@ def run_wiki_ingestion_pipeline():
 
             logger.info("Ingestion + Chunking pipeline completed.")
 
-        # Embedding Stage
+        # ── Stage 4: Embed ──────────────────────────────────
         logger.info("Embedding unprocessed chunks...")
         embed_articles()
         logger.info("Embedding complete.")
 
-        # Sync-to-Elastic Stage
+        # ── Stage 5: Sync to Elasticsearch ──────────────────
         logger.info("Syncing to Elasticsearch...")
         sync_to_elasticsearch()
         logger.info("Indexing complete.")

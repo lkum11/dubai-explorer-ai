@@ -3,6 +3,7 @@ import logging
 from app.models import WikiChunk
 # TODO use global es_client
 from app.elasticsearch.service import get_es_client
+from app.config import ES_INDEX_NAME
 from elasticsearch.helpers import bulk
 
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ def bulk_index_to_elasticsearch(documents):
             # pop removes "_id" from the dict and returns it
             doc_id = doc.pop("_id", None)
             actions.append({
-                "_index": "wiki_articles_vector",
+                "_index": ES_INDEX_NAME,
                 "_id": doc_id,
                 "_source": doc
             })
@@ -82,10 +83,12 @@ def sync_to_elasticsearch():
             return
         docs = prepare_es_document(chunks)
         logger.info(f"Attempting to index {len(docs)} documents to Elasticsearch.")
-        success_count, errors = bulk_index_to_elasticsearch(documents=docs)
+        result = bulk_index_to_elasticsearch(documents=docs)
+        success_count = result["success"]
+        errors = result["errors"]
 
         if errors:
-            logger.error("Some documents may have failed to index. Not marking chunks yet.")
+            logger.error(f"Some documents failed to index: {errors}. Not marking chunks yet.")
             return
         
         for chunk in chunks:

@@ -9,15 +9,9 @@ class Generator:
     # TODO Token efficiency
     def _build_prompt(self, query_text,  retrieved_chunks):
         """Builds the full RAG system prompt from query text and retrieved context chunks."""
-
-        # System Role: define assistant purpose
-        # Context: retrieved evidence
-        # Question: user query
-        # Answer (based only on the context above):
         try:
             logger.info(f"Building prompt with {len(retrieved_chunks)} retrieved chunks.")
-            if not retrieved_chunks:
-                logger.warning(f"No retrieved chunks provided — building minimal prompt")
+
             context = ""
             for index, chunk in enumerate(retrieved_chunks, start=1):
                 context += f"{index}. Title: {chunk['title']} \n Text: {chunk['text']} \n\n"
@@ -31,8 +25,7 @@ class Generator:
 
                 Question: {query_text}
 
-                Answer (Based on the information in the context, summarize the attractions, hotels, and notable places at Palm Jumeirah. 
-                List them clearly and concisely.):   
+                Answer (Based only on the context above.):   
             """
             return system_prompt.strip()
         except Exception:
@@ -42,29 +35,24 @@ class Generator:
             )
     
     def _call_model(self, prompt):
-        """
-            Send the constructed prompt to the OpenAI model.
-            Input: Prompt 
-            Returns: Generated text or None if the API call fails.
-        """
+        """Send prompt to OpenAI and return generated text."""
         try:
             logger.info(f"Calling OpenAI model: {self.model}")
-            response = self.client.responses.create(
+
+            # Using chat.completions — stable, standard API
+            response = self.client.chat.completions.create(
                 model=self.model,
-                input=[
-                    {
-                        "role": "system",
-                        "content": "You are a helpful ai assistant..."
-                    },
+                messages=[
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ]
             )
-            if not response.output_text:
+            answer = response.choices[0].message.content
+            if not answer:
                 logger.warning("Model returned empty output.")
-            return response.output_text
+            return answer
         except Exception:
             logger.exception(f"OpenAI API call failed for model={self.model}")
             return ""
@@ -81,10 +69,20 @@ class Generator:
         """
         try:
             logger.info(f"Starting generation for query: '{query_text[:60]}'")
+
+            if not retrieved_chunks:
+                logger.warning("No chunks retrieved — cannot generate RAG answer.")
+                return "I don't have enough information to answer that question based on available data."
+            
             prompt = self._build_prompt(query_text, retrieved_chunks)
+
+            if not prompt:
+                logger.error("Prompt building failed.")
+                return "No response generated due to internal error."
+            
             answer = self._call_model(prompt)
             if not answer:
-                logger.warning("No data availbale - returning fallback response.")
+                logger.warning("No data available - returning fallback response.")
                 return "No data available now, please check later"
 
             return answer
