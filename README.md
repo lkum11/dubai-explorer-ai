@@ -21,40 +21,38 @@ It answers natural language questions about Dubai attractions by:
 This project was built to demonstrate hands-on expertise in **AI-integrated backend engineering**, distributed systems, and modern Python architecture.
 
 ```mermaid
-flowchart TB
+flowchart LR
     User(["👤 User"])
 
-    subgraph API ["🌐 API Layer"]
-        GQL["Flask + GraphQL\naskRAG resolver"]
+    User -->|"GraphQL query"| Flask
+
+    subgraph Flask ["🌐 Flask + GraphQL"]
+        askRAG["askRAG resolver"]
     end
 
-    subgraph RAG ["🧠 RAG Pipeline"]
-        RET["Retriever\nKNN vector search"]
-        GEN["Generator\nGPT-4o-mini"]
+    Flask --> Retriever
+    Flask --> Generator
+
+    subgraph RAG ["🧠 RAG"]
+        Retriever["Retriever\nKNN search"] -->|"top chunks"| Generator["Generator\nGPT-4o-mini"]
     end
 
-    subgraph Storage ["🗄️ Storage"]
-        ES[("Elasticsearch\nvector index")]
-        PG[("PostgreSQL\nsource of truth")]
-        OAI["OpenAI API"]
+    Retriever --> ES[("Elasticsearch\nvectors")]
+    Retriever --> OpenAI["OpenAI\nEmbeddings"]
+    Generator --> OpenAI
+
+    Generator -->|"answer"| User
+
+    subgraph Ingestion ["⚙️ Ingestion pipeline"]
+        direction LR
+        Wikipedia --> Chunker --> PostgreSQL[("PostgreSQL")]
+        Chunker --> OpenAI
+        OpenAI --> ES
     end
 
-    subgraph Ingestion ["⚙️ Ingestion (run once)"]
-        WIKI["Wikipedia"] --> CHUNK["Chunker"]
-        CHUNK --> PG
-        CHUNK --> OAI
-        OAI --> ES
+    subgraph Infra ["🔧 Infrastructure"]
+        direction LR
+        Redis --> Celery["Celery Worker"]
+        Kibana["Kibana"]
     end
-
-    subgraph Supporting ["🔧 Supporting"]
-        REDIS["Redis"] --> CELERY["Celery Worker"]
-        REDIS --> BEAT["Celery Beat"]
-        KIBANA["Kibana"]
-    end
-
-    User -->|query| GQL
-    GQL --> RET & GEN
-    RET --> OAI & ES
-    RET -->|chunks| GEN
-    GEN -->|answer| User
 ```
