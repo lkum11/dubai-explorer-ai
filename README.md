@@ -154,6 +154,7 @@ Decouples async tasks (email, background jobs) from the request lifecycle. Redis
 - **No authentication**: GraphQL endpoint is open. Production would require API key or JWT auth.
 - **Single-node Elasticsearch**: TLS and multi-node config is available but disabled for local dev simplicity.
 - **No streaming responses**: Answers are returned as complete strings. Future work: stream tokens via WebSocket or SSE.
+- **Chatbot module**: Prototype session-based chat under `app/chatbot/` — not yet integrated with RAG pipeline.
 
 ## 👩‍💻 Author
 
