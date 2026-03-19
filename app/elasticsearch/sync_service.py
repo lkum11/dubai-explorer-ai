@@ -1,8 +1,7 @@
 from app.db import db
 import logging
 from app.models import WikiChunk
-# TODO use global es_client
-from app.elasticsearch.service import get_es_client
+from flask import current_app
 from app.config import ES_INDEX_NAME
 from elasticsearch.helpers import bulk
 
@@ -49,8 +48,8 @@ def bulk_index_to_elasticsearch(documents):
         if not documents:
             logger.info("No valid documents prepared for indexing.")
             return {"success": 0, "errors": 0}
-        # TODO: use global es_client
-        es = get_es_client()
+        
+        es = current_app.es_client
         actions = []
         for doc in documents:
             # pop removes "_id" from the dict and returns it

@@ -1,4 +1,4 @@
-from elasticsearch import Elasticsearch, ConnectionError, AuthenticationException
+from elasticsearch import Elasticsearch
 import os
 import logging
 

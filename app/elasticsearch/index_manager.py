@@ -1,4 +1,4 @@
-from app.elasticsearch.service import get_es_client
+from flask import current_app
 import logging
 
 logger = logging.getLogger(__name__)
@@ -6,8 +6,7 @@ logger = logging.getLogger(__name__)
 
 class ElasticsearchIndexManager:
     def __init__(self):
-        # TODO use global es client
-        self.es = get_es_client()
+        self.es = current_app.es_client
 
     def create_rag_index(self, index_name, settings, mapping):
         """ Creates an Elasticsearch index if it doesn't exist."""
