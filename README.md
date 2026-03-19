@@ -20,39 +20,41 @@ It answers natural language questions about Dubai attractions by:
 
 This project was built to demonstrate hands-on expertise in **AI-integrated backend engineering**, distributed systems, and modern Python architecture.
 
-## 🏗️ Architecture
 ```mermaid
-flowchart TD
+flowchart TB
     User(["👤 User"])
-    GQL["Flask + GraphQL API\naskRAG resolver"]
-    RET["Retriever\nKNN vector search"]
-    GEN["Generator\nGPT-4o-mini"]
-    ES[("Elasticsearch\nVector index 1536d")]
-    OAI["OpenAI API\nEmbeddings + Chat"]
-    PG[("PostgreSQL\nSource of truth")]
 
-    User -->|GraphQL query| GQL
-    GQL --> RET
-    GQL --> GEN
-    RET -->|embed query| OAI
-    RET -->|KNN search| ES
-    RET -->|top chunks| GEN
-    GEN -->|generate answer| OAI
+    subgraph API ["🌐 API Layer"]
+        GQL["Flask + GraphQL\naskRAG resolver"]
+    end
+
+    subgraph RAG ["🧠 RAG Pipeline"]
+        RET["Retriever\nKNN vector search"]
+        GEN["Generator\nGPT-4o-mini"]
+    end
+
+    subgraph Storage ["🗄️ Storage"]
+        ES[("Elasticsearch\nvector index")]
+        PG[("PostgreSQL\nsource of truth")]
+        OAI["OpenAI API"]
+    end
+
+    subgraph Ingestion ["⚙️ Ingestion (run once)"]
+        WIKI["Wikipedia"] --> CHUNK["Chunker"]
+        CHUNK --> PG
+        CHUNK --> OAI
+        OAI --> ES
+    end
+
+    subgraph Supporting ["🔧 Supporting"]
+        REDIS["Redis"] --> CELERY["Celery Worker"]
+        REDIS --> BEAT["Celery Beat"]
+        KIBANA["Kibana"]
+    end
+
+    User -->|query| GQL
+    GQL --> RET & GEN
+    RET --> OAI & ES
+    RET -->|chunks| GEN
     GEN -->|answer| User
-
-    subgraph Ingestion ["⚙️ Ingestion Pipeline (run once)"]
-        WIKI["Wikipedia API"] -->|fetch| CHUNK["Chunker\n1000 chars"]
-        CHUNK -->|save| PG
-        CHUNK -->|embed| OAI
-        OAI -->|vectors| ES
-    end
-
-    subgraph Supporting ["🔧 Supporting Services"]
-        REDIS["Redis\nTask broker"]
-        CELERY["Celery Worker\nAsync tasks"]
-        BEAT["Celery Beat\nScheduled tasks"]
-        KIBANA["Kibana\nES monitoring"]
-        REDIS --> CELERY
-        REDIS --> BEAT
-    end
 ```
