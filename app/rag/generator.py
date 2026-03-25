@@ -82,8 +82,8 @@ class Generator:
             
             answer = self._call_model(prompt)
             if not answer:
-                logger.warning("No data available - returning fallback response.")
-                return "No data available now, please check later"
+                logger.warning("No answer returned — returning fallback response.")
+                return "No response generated due to internal error."
 
             return answer
         
