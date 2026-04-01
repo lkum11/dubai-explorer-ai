@@ -26,6 +26,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "postgresql+psycopg://postgres:postgres@db:5432/appdb")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
 
 
 migrate = Migrate()
@@ -96,6 +97,9 @@ def create_app():
     def trigger_email():
         task = send_welcome_email.delay("joinlovely@gmail.com", "Lovely")
         return jsonify(message="Email task queued", task_id=task.id)
+    
+    from app.auth.routes import auth_bp
+    app.register_blueprint(auth_bp)
     
     logger.info("Flask app initialized with Redis and GraphQL")
 

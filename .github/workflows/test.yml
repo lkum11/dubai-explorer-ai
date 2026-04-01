@@ -36,6 +36,7 @@ jobs:
       FLASK_APP: wsgi.py
       FLASK_ENV: development
       SENDER_EMAIL: joinlovely@gmail.com
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
 
     steps:
       - name: Checkout code
