@@ -3,10 +3,12 @@ from app.rag.retriever import Retriever
 from app.rag.generator import Generator
 from app.rag.embedder import get_embedding_model
 from app.config import ES_INDEX_NAME, TOP_K, GENERATION_MODEL
+from app.auth.middleware import require_auth
 import logging
 
 logger = logging.getLogger(__name__)
 
+@require_auth
 def resolve_askRAG(root, info, query_text):
     try:
         logger.info(f"askRAG resolver called with query: '{query_text[:60]}'")
@@ -22,4 +24,4 @@ def resolve_askRAG(root, info, query_text):
 
     except Exception:
         logger.exception(f"Unexpected exception for query: {query_text[:60]}")
-        return "Internal error occurred while generating response."
+        raise
