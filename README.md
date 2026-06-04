@@ -156,6 +156,18 @@ Decouples async tasks (email, background jobs) from the request lifecycle. Redis
 - **No streaming responses**: Answers are returned as complete strings. Future work: stream tokens via WebSocket or SSE.
 - **Chatbot module**: Prototype session-based chat under `app/chatbot/` — not yet integrated with RAG pipeline.
 
+## 🤖 v2 — Agentic Self-Correcting RAG
+
+The pipeline was upgraded from a fixed RAG system to a 
+self-correcting agentic system using LangGraph.
+
+### What Changed:
+
+Instead of blindly trusting every GPT response, the system 
+now checks its own answers before returning them.
+
+### Flow:
+
 ## 👩‍💻 Author
 
 **Lovely Kumari** — Senior Python Backend Engineer  
