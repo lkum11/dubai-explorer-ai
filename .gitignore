@@ -33,6 +33,7 @@ logs/
 # --- Env files (never commit secrets) ---
 .env
 .env.*
+!.env.example
 
 # --- Docker volumes / temp data ---
 pgdata/
